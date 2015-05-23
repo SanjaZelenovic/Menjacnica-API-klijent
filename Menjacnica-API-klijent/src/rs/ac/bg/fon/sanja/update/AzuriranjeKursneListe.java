@@ -2,24 +2,28 @@ package rs.ac.bg.fon.sanja.update;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 
-import com.google.gson.JsonArray;
+
+
 import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
 
 import rs.ac.bg.fon.sanja.Valuta;
 import rs.ac.bg.fon.sanja.util.JsonRatesAPIKomunikacija;
 
 public class AzuriranjeKursneListe {
 
-	private final String putanjaDoFajlaKursnaLista = "data/kursnaLista.json";
+	private static final String putanjaDoFajlaKursnaLista = "data/kursnaLista.json";
 	LinkedList<Valuta> kursevi = new LinkedList<Valuta>();
 	
 	
@@ -31,6 +35,8 @@ public class AzuriranjeKursneListe {
 
 			in.close();
 
+		} catch (EOFException e) {
+			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -44,7 +50,7 @@ public class AzuriranjeKursneListe {
 			ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(putanjaDoFajlaKursnaLista)));
 			JsonObject dJson = new JsonObject();
 			dJson.addProperty("datum", datumUpisa.toString());
-			out.writeObject(dJson);
+			
 			
 			JsonArray kursArray = new JsonArray();
 			
@@ -58,11 +64,16 @@ public class AzuriranjeKursneListe {
 
 					kursArray.add(valutaJson);
 				}
+
+				out.writeObject(dJson);
 				out.writeObject(kursArray);
 			}
 
 			out.close();
-			
+		} catch (NotSerializableException e) {
+			e.printStackTrace();
+		} catch (EOFException e) {
+			e.printStackTrace();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -71,24 +82,28 @@ public class AzuriranjeKursneListe {
 	}
 	
 public void azurirajValute() {
-		//kreira novu listu valuta, koja sadrzi sve koje za sada postoje
-		LinkedList<Valuta> noviKursevi = ucitajValute();
-		
-		//pomocni niz koji kupi nazive valuta i prosledjuje metodi vratiIznosKurseva
-		String[] naziviTrenutnihKurseva = new String[kursevi.size()];
-		
-		for (int i = 0; i < naziviTrenutnihKurseva.length; i++) {
-			naziviTrenutnihKurseva[i] = kursevi.get(i).getNaziv();
-		}
-		
-		Valuta[] noveValute = JsonRatesAPIKomunikacija.vratiIznosKurseva(naziviTrenutnihKurseva);
-		
-		for (int i = 0; i < noveValute.length; i++) {
-			if(!noviKursevi.contains(noveValute)) {
-				noviKursevi.add(noveValute[i]);
+		try {
+			//kreira novu listu valuta, koja sadrzi sve koje za sada postoje
+			LinkedList<Valuta> noviKursevi = ucitajValute();
+			
+			//pomocni niz koji kupi nazive valuta i prosledjuje metodi vratiIznosKurseva
+			String[] naziviTrenutnihKurseva = new String[kursevi.size()];
+			
+			for (int i = 0; i < naziviTrenutnihKurseva.length; i++) {
+				naziviTrenutnihKurseva[i] = kursevi.get(i).getNaziv();
 			}
+			
+			Valuta[] noveValute = JsonRatesAPIKomunikacija.vratiIznosKurseva(naziviTrenutnihKurseva);
+			
+			for (int i = 0; i < noveValute.length; i++) {
+				if(!noviKursevi.contains(noveValute)) {
+					noviKursevi.add(noveValute[i]);
+				}
+			}
+			
+			upisiValute(noviKursevi, new GregorianCalendar());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		
-		upisiValute(noviKursevi, new GregorianCalendar());
 	}
 }
