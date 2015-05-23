@@ -1,4 +1,4 @@
-package rs.ac.bg.fon;
+package rs.ac.bg.fon.sanja;
 
 public class Valuta {
 
