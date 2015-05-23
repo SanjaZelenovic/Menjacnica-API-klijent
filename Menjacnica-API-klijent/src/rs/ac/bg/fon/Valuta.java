@@ -5,6 +5,11 @@ public class Valuta {
 	private String naziv;
 	private double kurs;
 	
+	public Valuta(String naziv, double kurs) {
+		this.naziv = naziv;
+		this.kurs = kurs;
+	}
+	
 	public String getNaziv() {
 		return naziv;
 	}
